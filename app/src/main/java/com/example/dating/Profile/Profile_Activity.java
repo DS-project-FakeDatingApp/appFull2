@@ -1,6 +1,7 @@
 package com.example.dating.Profile;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -9,10 +10,15 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.example.dating.Main.LoginActivity;
 import com.example.dating.R;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentReference;
@@ -29,6 +35,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -44,19 +51,22 @@ public class Profile_Activity extends AppCompatActivity {
     private Context mContext = Profile_Activity.this;
 
     //get instance of firebase
+    FirebaseAuth mAuth;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference ref = database.getReference("server/saving-data/fireblog");
     DatabaseReference usersRef = ref.child("users");
+    GoogleSignInClient mGoogleSignInClient;
 
-    String currentUser = FirebaseAuth.getInstance().getCurrentUser().getUid();
+    String currentUser;
 
     ListView listview;
 
     //private ArrayAdapter<String> adapter;
     private EditText edittxt;
 
-    Button add1, add2, add3, add4, add5, save;
+    Button add1, add2, add3, add4, add5, save, logout;
+    Spinner gender;
     EditText getabout, displayName;
 
     private static ArrayList<String> interestslist = new ArrayList<String>();
@@ -74,6 +84,11 @@ public class Profile_Activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
         setupTopNavigationView();
 
@@ -82,11 +97,18 @@ public class Profile_Activity extends AppCompatActivity {
         add3 = findViewById(R.id.add3);
         add5 = findViewById(R.id.add5);
         save = findViewById(R.id.saveinfo);
+        logout = findViewById(R.id.logout);
 
         getabout = findViewById(R.id.editabout);
         displayName = findViewById(R.id.displayName);
         listview = findViewById(R.id.listview);
         interest = findViewById(R.id.interests);
+        gender = findViewById(R.id.gender);
+
+        String[] items = new String[]{"Male", "Female","Others"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>
+                (this, android.R.layout.simple_spinner_dropdown_item, items);
+        gender.setAdapter(adapter);
 
         add1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
@@ -110,6 +132,11 @@ public class Profile_Activity extends AppCompatActivity {
             public void onClick(View view){
                 saveInfo();
             }
+        });
+
+        logout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {logout();}
         });
 
         myAdapter = new ArrayAdapter<String>(this,
@@ -238,7 +265,8 @@ public class Profile_Activity extends AppCompatActivity {
 
     //saves user info into the firestore. Document being added is referenced using user uid
     private void saveInfo(){
-        UserInfo userinfo = new UserInfo(displayName.getText().toString(),getabout.getText()
+        UserInfo userinfo = new UserInfo(displayName.getText().toString(),gender.getSelectedItem()
+                .toString(),getabout.getText()
                 .toString(), add2.getText().toString(), add1.getText().toString(), add3.getText()
                 .toString(),interestslist);
         db.collection("users")
@@ -255,6 +283,13 @@ public class Profile_Activity extends AppCompatActivity {
                 });
         Toast.makeText(Profile_Activity.this, "Successfully Updated",
                 Toast.LENGTH_SHORT).show();
+    }
+
+    private void logout(){
+            FirebaseAuth.getInstance().signOut();
+            mGoogleSignInClient.signOut();
+            Intent intent = new Intent(Profile_Activity.this, LoginActivity.class);
+            startActivity(intent);
     }
 
 }

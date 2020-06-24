@@ -3,16 +3,16 @@ package com.example.dating.Profile;
 import java.util.ArrayList;
 
 public class UserInfo {
-    private String name, bio, status, interestedin, seekingfor;
+    private String name, bio, status, interestedin, seekingfor, gender;
     private ArrayList<String> interests;
 
     public UserInfo(){
 
     }
 
-    public UserInfo(String name, String bio, String status,String interestedin,String seekingfor,
+    public UserInfo(String name,String gender, String bio, String status,String interestedin,String seekingfor,
                     ArrayList<String> interests){
-        this.name=name;this.bio=bio;this.status=status;this.interestedin=interestedin;
+        this.name=name;this.gender=gender;this.bio=bio;this.status=status;this.interestedin=interestedin;
         this.seekingfor=seekingfor;this.interests=interests;
     }
 
@@ -63,4 +63,6 @@ public class UserInfo {
     public void setName(String name) {
         this.name = name;
     }
+
+    public String getGender() { return gender; }
 }
